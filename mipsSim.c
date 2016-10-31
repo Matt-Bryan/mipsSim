@@ -52,15 +52,6 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
 
   fclose(fd);
 
-
-/* ok, now dump out the instructions loaded: */
-
-  /*for (i = 0; i<memp; i+=4)	/* i contains byte offset addresses
-     {
-     printf("Instruction@%08X : %08X", i, mem[i/4]);
-     }
-  printf("\n");*/
-
   return memp;
   }
 
@@ -71,8 +62,8 @@ int main(int argc, char **argv) {
 	memp = loadMemory(argv[1]);
 
 	for (i = 0; i < memp; i += 4) {
-       printf("Instruction@%08X : %08X\n", i, mem[i/4]);
-    }
+		printf("Instruction@%08X : %08X\n", i, mem[i/4]);
+	}
 
 	return 0;
 }
