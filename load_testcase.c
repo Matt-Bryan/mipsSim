@@ -1,4 +1,4 @@
-/*----------------------------------------------------------------------*
+/----------------------------------------------------------------------*
  *	Example mips_asm program loader. This loads the mips_asm binary	*
  *	named "testcase1.mb" into an array in memory. It reads		*
  *	the 64-byte header, then loads the code into the mem array.	*
@@ -267,4 +267,4 @@ main(int argc, char **argv)
   printf("\n");
 
   exit(0);
-  }
+  }  //making a comment
