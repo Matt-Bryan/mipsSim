@@ -55,6 +55,10 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
   return memp;
   }
 
+void execute() {
+   
+}
+
 int main(int argc, char **argv) {
 	unsigned int reg[32], PC;
 	int i, memp;
