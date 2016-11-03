@@ -19,7 +19,8 @@
 typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
-MIPS mem[1024];		/* Room for 4K bytes */
+static MIPS mem[1024];		/* Room for 4K bytes */
+static unsigned int reg[32], PC;
 
 int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and loads the MIPS binary file into an array
   {
@@ -60,14 +61,25 @@ void execute() {
 }
 
 int main(int argc, char **argv) {
-	unsigned int reg[32], PC;
-	int i, memp;
+	int i, memp, input = 0;
 
 	memp = loadMemory(argv[1]);
 
-	for (i = 0; i < memp; i += 4) {
-		printf("Instruction@%08X : %08X\n", i, mem[i/4]);
-	}
+	do {
+		printf("Enter 0 for Run, 1 for Single-Step, or -1 to exit\n");
+		if (scanf("%02d", &input) >= 0 && input != -1) {
+			if (input == 1) {
+				//Single-step
+			}
+			else {
+				//Run
+			}
+		}
+	} while (input > 0);
+
+	// for (i = 0; i < memp; i += 4) {
+ //       printf("Instruction@%08X : %08X\n", i, mem[i/4]);
+ //    }
 
 	return 0;
 }
