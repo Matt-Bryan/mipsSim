@@ -16,11 +16,22 @@
 
 #include "mips_asm_header.h"
 
+#define OPMASK 0xFC000000	//Right shift 26
+#define RSMASK 0x03E00000   //21
+#define RTMASK 0x001F0000   //16
+#define RDMASK 0x0000F800   //11
+#define SHMASK 0x000007C0   //6
+#define FNMASK 0x0000003F
+#define IMMASK 0x0000FFFF
+#define JIMASK 0x03FFFFFF
+#define SYMASK 0xFFFFFFF0
+
 typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
 static MIPS mem[1024];		/* Room for 4K bytes */
-static unsigned int reg[32], PC;
+static unsigned int reg[32], PC, *nextInstruction;
+
 
 int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and loads the MIPS binary file into an array
   {
@@ -56,23 +67,100 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
   return memp;
   }
 
+/* Takes the location in memory of the next instruction as an arguement.
+*  
+*  Modifies the nextInstruction buffer with details about the next Instruction
+*  
+*  If it detects a syscall halt, it only puts -1 in first spot of buffer  -MB*/
+void decode(int memLoc) {
+	unsigned int instr = mem[memLoc/4], opCode;
+	int count;
+
+	for (count = 0; count < 6; count++) {	/* Clear out nextInstruction buffer */
+		nextInstruction[count] = 0;
+	}
+	opCode = (instr & OPMASK) >> 26;
+	nextInstruction[0] = opCode;
+
+	if ((instr & SYMASK) == 0 && reg[2] == 0) {
+		//Syscall HALT
+		nextInstruction[0] = -1;
+	}
+	else if (opCode == 0) {
+		//Register
+		nextInstruction[1] = (instr & RSMASK) >> 21;
+		nextInstruction[2] = (instr & RTMASK) >> 16;
+		nextInstruction[3] = (instr & RDMASK) >> 11;
+		nextInstruction[4] = (instr & SHMASK) >> 6;
+		nextInstruction[5] = (instr & FNMASK);
+	}
+	else if (opCode == 0x02 || opCode == 0x03) {
+		//Jump
+		nextInstruction[1] = (instr & JIMASK);
+	}
+	else {
+		//Immediate
+		nextInstruction[1] = (instr & RSMASK) >> 21;
+		nextInstruction[2] = (instr & RTMASK) >> 16;
+		nextInstruction[3] = (instr & IMMASK);
+	}
+}
+
 void execute() {
-   
+	int count = 0;
+
+	for (count; count < 6; count++) {
+		printf("nextInstruction[%d]: %08X\n", count, nextInstruction[count]);
+	}
+	printf("\n");
+}
+
+/* Displays the number of instructions simulated,
+*  the number of memory references, and the CPI, 
+*  up until this point.
+*
+*  Takes the corresponding details from main as
+*  arguements.    -MB */
+void displayResult(int numInstr, float clockCount, int memRef) {
+	int count = 0;
+
+	for (count; count < 32; count++) {
+		printf("R%d = %08X\n", count, reg[count]);
+	}
+	printf("Number of instructions simulated: %d\nMemory References: %d\nCPI: %.2f\n\n", numInstr, memRef, clockCount / numInstr);
 }
 
 int main(int argc, char **argv) {
-	int i, memp, input = 0;
+	int curLoc = 0, memp, input = 0, numInstr = 0, memRef = 0;
+	float clockCount = 0;
+
+	nextInstruction = calloc(6, sizeof(int));
 
 	memp = loadMemory(argv[1]);
 
 	do {
 		printf("Enter 0 for Run, 1 for Single-Step, or -1 to exit\n");
+
 		if (scanf("%02d", &input) >= 0 && input != -1) {
+
 			if (input == 1) {
 				//Single-step
+
+				decode(curLoc);
+				execute();
+				curLoc += 4;
+				numInstr++;
+				displayResult(numInstr, clockCount, memRef);
 			}
 			else {
-				//Run
+				//Running
+
+				for (curLoc; curLoc < memp; curLoc += 4) {
+					decode(curLoc);
+					execute();
+					numInstr++;
+				}
+				displayResult(numInstr, clockCount, memRef);
 			}
 		}
 	} while (input > 0);
@@ -81,5 +169,6 @@ int main(int argc, char **argv) {
  //       printf("Instruction@%08X : %08X\n", i, mem[i/4]);
  //    }
 
+	free(nextInstruction);
 	return 0;
 }
