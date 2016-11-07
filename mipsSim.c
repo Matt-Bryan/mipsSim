@@ -107,9 +107,36 @@ void decode(int memLoc) {
 	}
 }
 
-void execute() {
+void exJump() {
+	if (nextInstruction[0] == 0x02) {
+		//J
 
+		PC = (PC & 0xF0000000) | (nextInstruction[1] << 2);
+		clockCount += 3;
+	}
+	else {
+		//Jal
 
+		reg[31] = PC + 4;
+		PC = (PC & 0xF0000000) | (nextInstruction[1] << 2);
+		clockCount += 3;
+	}
+}
+
+int execute() {
+	if (nextInstruction[0] == -1) {
+		return -1;
+	}
+	else if (nextInstruction[0] == 0) {
+		//exReg();
+	}
+	else if (nextInstruction[0] == 0x02 || nextInstruction[0] == 0x03) {
+		exJump();
+	}
+	else {
+		//exImm();
+	}
+	return 0;
 
 	// int count = 0;
 
@@ -135,9 +162,10 @@ void displayResult(int numInstr, float clockCount, int memRef) {
 }
 
 int main(int argc, char **argv) {
-	int curLoc = 0, memp, input = 0, numInstr = 0;
+	int memp, input = 0, numInstr = 0, exitFlag = 0;
 
 	nextInstruction = calloc(6, sizeof(int));
+	PC = 0;
 	clockCount = 0.0;
 	memRef = 0;
 
@@ -151,20 +179,28 @@ int main(int argc, char **argv) {
 			if (input == 1) {
 				//Single-step
 
-				decode(curLoc);
-				execute();
-				curLoc += 4;
+				decode(PC);
+				if (execute() == -1) {
+					input = -1;
+				}
 				numInstr++;
 				displayResult(numInstr, clockCount, memRef);
 			}
 			else {
 				//Running
 
-				for (curLoc; curLoc < memp; curLoc += 4) {
-					decode(curLoc);
-					execute();
+				while (exitFlag != -1) {
+					decode(PC);
+					exitFlag = execute();
 					numInstr++;
 				}
+				// for (curLoc; curLoc < memp & input > 0; curLoc += 4) {
+				// 	decode(curLoc);
+				// 	if (execute() == -1) {
+				// 		input = -1;
+				// 	}
+				// 	numInstr++;
+				// }
 				displayResult(numInstr, clockCount, memRef);
 			}
 		}
