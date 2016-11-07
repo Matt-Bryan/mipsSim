@@ -30,7 +30,8 @@ typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
 static MIPS mem[1024];		/* Room for 4K bytes */
-static unsigned int reg[32], PC, *nextInstruction;
+static unsigned int reg[32], PC, *nextInstruction, memRef;
+static float clockCount;
 
 
 int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and loads the MIPS binary file into an array
@@ -137,10 +138,11 @@ void displayResult(int numInstr, float clockCount, int memRef) {
 }
 
 int main(int argc, char **argv) {
-	int curLoc = 0, memp, input = 0, numInstr = 0, memRef = 0;
-	float clockCount = 0;
+	int curLoc = 0, memp, input = 0, numInstr = 0;
 
 	nextInstruction = calloc(6, sizeof(int));
+	clockCount = 0.0;
+	memRef = 0;
 
 	memp = loadMemory(argv[1]);
 
