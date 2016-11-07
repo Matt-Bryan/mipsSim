@@ -3,4 +3,4 @@ A multicycle, non-pipelined MIPS simulator
 
 Main program file is mipsSim.c
 
-load_testcase.c now obsolete and just used to take functions from
+Other files such as load_testcase.c are not needed
