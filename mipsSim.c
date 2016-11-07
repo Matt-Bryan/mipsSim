@@ -67,7 +67,7 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
   return memp;
   }
 
-/* Takes the location in memory of the next instruction as an arguement.
+/* Takes the location in memory of the next instruction as an argument.
 *  
 *  Modifies the nextInstruction buffer with details about the next Instruction
 *  
@@ -107,13 +107,19 @@ void decode(int memLoc) {
 }
 
 void execute() {
-	int count = 0;
+	int count;
+   
+   if (nextInstruction[0] == -1) { //Syscall HALT
+      return;
+   }
 
-	for (count; count < 6; count++) {
+	for (count = 0; count < 6; count++) {
 		printf("nextInstruction[%d]: %08X\n", count, nextInstruction[count]);
 	}
 	printf("\n");
 }
+
+
 
 /* Displays the number of instructions simulated,
 *  the number of memory references, and the CPI, 
