@@ -55,8 +55,21 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
   return memp;
   }
 
-void execute() {
+int *decode(unsigned int *instr) {
    
+}
+
+void execute(unsigned int *instr) {
+   
+   if (instr[0] == 0) { //meaning a R instruction
+      
+   }
+   else if (instr[0] == 1) { //I instruction
+      
+   }
+   else { //J instruction
+      
+   }
 }
 
 int main(int argc, char **argv) {
