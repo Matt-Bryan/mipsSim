@@ -204,12 +204,24 @@ void exReg()
 }
 
 void execute() {
+<<<<<<< HEAD
 	 int count = 0;
 
 	 for (count; count < 6; count++) {
 	 	printf("nextInstruction[%d]: %08X\n", count, nextInstruction[count]);
 	 }
 	 printf("\n");
+=======
+
+
+
+	// int count = 0;
+
+	// for (count; count < 6; count++) {
+	// 	printf("nextInstruction[%d]: %08X\n", count, nextInstruction[count]);
+	// }
+	// printf("\n");
+>>>>>>> af910850915729dd3722c54ab3485b0f9fabac1b
 }
 
 /* Displays the number of instructions simulated,
