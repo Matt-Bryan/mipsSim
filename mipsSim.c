@@ -137,31 +137,31 @@ void exImm() {
    
    switch (nextInstruction[0]) { //switching on the op code
       case 0x08: //add immediate
-         reg[nextInstruction[2]] = (int) nextInstruction[1] + (int) nextInstruction[3];
+         reg[nextInstruction[2]] = (int) reg[nextInstruction[1]] + (int) nextInstruction[3];
          clockCount += 4;
          break;
       case 0x09: //add immediate unsigned
-         reg[nextInstruction[2]] = nextInstruction[1] + nextInstruction[3];
+         reg[nextInstruction[2]] = reg[nextInstruction[1]] + nextInstruction[3];
          clockCount += 4;
          break;
       case 0x0C: //and immediate
-         reg[nextInstruction[2]] = nextInstruction[1] & nextInstruction[3];
+         reg[nextInstruction[2]] = reg[nextInstruction[1]] & nextInstruction[3];
          clockCount += 4;
          break;
       case 0x0D: //or immediate
-         reg[nextInstruction[2]] = nextInstruction[1] | nextInstruction[3];
+         reg[nextInstruction[2]] = reg[nextInstruction[1]] | nextInstruction[3];
          clockCount += 4;
          break;
       case 0x0E: //xor immediate
-         reg[nextInstruction[2]] = nextInstruction[1] ^ nextInstruction[3];
+         reg[nextInstruction[2]] = reg[nextInstruction[1]] ^ nextInstruction[3];
          clockCount += 4;
          break;
       case 0x0A: //set less than signed
-         reg[nextInstruction[2]] = (int) nextInstruction[1] < (int) nextInstruction[3] ? nextInstruction[1] : nextInstruction[3];
+         reg[nextInstruction[2]] = (int) reg[nextInstruction[1]] < (int) nextInstruction[3] ? 1 : 0;
          clockCount += 4;
          break;
       case 0x0B: //set less than unsigned
-         reg[nextInstruction[2]] = nextInstruction[1] < nextInstruction[3] ? nextInstruction[1] : nextInstruction[3];
+         reg[nextInstruction[2]] = reg[nextInstruction[1]] < nextInstruction[3] ? 1 : 0;
          clockCount += 4;
          break;
       case 0x04: //branch equal
@@ -175,68 +175,77 @@ void exImm() {
          clockCount += 3;
          break;
       case 0x20: //load byte
-         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         addr = mem[reg[nextInstruction[1]] + nextInstruction[3]] % 4;
          if (addr == 0)
-            reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+            reg[nextInstruction[2]] = (mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK;
          else if (addr == 1)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
          else if (addr == 2)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
          else if (addr == 3)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
          clockCount += 5;
+         memRef++;
          break;
       case 0x24: //load byte unsigned
-         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         addr = mem[reg[nextInstruction[1]] + nextInstruction[3]] % 4;
          if (addr == 0)
-            reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+            reg[nextInstruction[2]] = (mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK;
          else if (addr == 1)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
          else if (addr == 2)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
          else if (addr == 3)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
          clockCount += 5;
+         memRef++;
          break;
       case 0x21 || 0x25: //load halfword
-         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         addr = mem[reg[nextInstruction[1]] + nextInstruction[3]] % 4;
          if (addr == 0)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & HALFMASK);
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & HALFMASK);
          else if (addr == 2)
-            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
+            reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
          clockCount += 5;
+         memRef++;
          break;
       case 0x0F: //load upper
-         reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
+      	 reg[nextInstruction[2]] |= (nextInstruction[3] << 16);
+         //reg[nextInstruction[2]] = ((mem[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
          clockCount += 5;
+         memRef++;
          break;
       case 0x23: //load word
-         reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]]) / 4;
+         reg[nextInstruction[2]] = (mem[reg[nextInstruction[1]] + nextInstruction[3]]) / 4;
          clockCount += 5;
+         memRef++;
          break;
       case 0x28: //store byte
-         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         addr = mem[reg[nextInstruction[1]] + nextInstruction[3]] % 4;
          if (addr == 0)
-            mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+            mem[nextInstruction[2] / 4] = (reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK;
          else if (addr == 1)
-            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 8;
+            mem[nextInstruction[2] / 4] = ((reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK) << 8;
          else if (addr == 2)
-            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
+            mem[nextInstruction[2] / 4] = ((reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
          else if (addr == 3)
-            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 24;
+            mem[nextInstruction[2] / 4] = ((reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK) << 24;
          clockCount += 5;
+         memRef++;
          break;
       case 0x29: //store halfword
-         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         addr = mem[reg[nextInstruction[1]] + nextInstruction[3]] % 4;
          if (addr == 0)
-            mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+            mem[nextInstruction[2] / 4] = (reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK;
          else if (addr == 2)
-            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
+            mem[nextInstruction[2] / 4] = ((reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
          clockCount += 5;
+         memRef++;
          break;
       case 0x2B: //store word
-         mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         mem[nextInstruction[2] / 4] = (reg[reg[nextInstruction[1]] + nextInstruction[3]] / 4) & BYTEMASK;
          clockCount += 5;
+         memRef++;
          break;
     }
 }
