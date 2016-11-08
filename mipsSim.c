@@ -37,7 +37,8 @@ typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
 static MIPS mem[1024];		/* Room for 4K bytes */
-static unsigned int reg[32], PC, *nextInstruction, memRef;
+static unsigned int PC, *nextInstruction, memRef;
+static long reg[32];
 static float clockCount;
 
 
@@ -90,7 +91,7 @@ void decode(int memLoc) {
 	opCode = (instr & OPMASK) >> 26;
 	nextInstruction[0] = opCode;
 
-	if ((instr & SYMASK) == 0 && reg[2] == 0) {
+	if ((instr & SYMASK) == 0 && reg[2] == 10) {
 		//Syscall HALT
 		nextInstruction[0] = -1;
 	}
@@ -133,6 +134,7 @@ void exJump() {
 /*Function that handles I type instructions */
 void exImm() {
    unsigned int addr;
+   int signedVal;
    PC += 4;
    
    switch (nextInstruction[0]) { //switching on the op code
@@ -165,13 +167,25 @@ void exImm() {
          clockCount += 4;
          break;
       case 0x04: //branch equal
-         if (reg[nextInstruction[2]] == reg[nextInstruction[1]])
-            PC = (PC + nextInstruction[3]) / 4;
+         if (reg[nextInstruction[2]] == reg[nextInstruction[1]]) {
+         	signedVal = (int) nextInstruction[3];
+         	if (nextInstruction[3] & 0x00008000) {
+         		signedVal |= 0xFFFF0000;
+         	}
+         	//printf("NI: %08X, PC: %d", signedVal, PC);
+            PC = PC + (signedVal * 4);
+         }
          clockCount += 3;
          break;
       case 0x05: //branch not equal
-         if (reg[nextInstruction[2]] != reg[nextInstruction[1]])
-            PC = (PC + nextInstruction[3]) / 4;
+         if (reg[nextInstruction[2]] != reg[nextInstruction[1]]) {
+         	signedVal = (int) nextInstruction[3];
+         	if (nextInstruction[3] & 0x00008000) {
+         		signedVal |= 0xFFFF0000;
+         	}
+         	//printf("NI: %08X, PC: %d", signedVal, PC);
+            PC = PC + (signedVal * 4);
+         }
          clockCount += 3;
          break;
       case 0x20: //load byte
