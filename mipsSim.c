@@ -26,6 +26,13 @@
 #define JIMASK 0x03FFFFFF
 #define SYMASK 0xFFFFFFF0
 
+#define BYTEMASK 0x000000FF //for load and store bytes
+#define SBYTEMASK 0x0000FF00 
+#define TBYTEMASK 0x00FF0000
+#define FRBYTEMASK 0xFF000000
+#define HALFMASK 0x0000FFFF // for half words
+#define SHALFMASK 0xFFFF0000
+
 typedef unsigned int MIPS, *MIPS_PTR;
 
 MB_HDR mb_hdr;		/* Header area */
@@ -107,6 +114,117 @@ void decode(int memLoc) {
 	}
 }
 
+void exImm() {
+   unsigned int addr;
+   PC += 4;
+   
+   switch (nextInstruction[0]) { //switching on the op code
+      case 0x08: //add immediate
+         reg[nextInstruction[2]] = (int) nextInstruction[1] + (int) nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x09: //add immediate unsigned
+         reg[nextInstruction[2]] = nextInstruction[1] + nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x0C: //and immediate
+         reg[nextInstruction[2]] = nextInstruction[1] & nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x0D: //or immediate
+         reg[nextInstruction[2]] = nextInstruction[1] | nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x0E: //xor immediate
+         reg[nextInstruction[2]] = nextInstruction[1] ^ nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x0A: //set less than signed
+         reg[nextInstruction[2]] = (int) nextInstruction[1] < (int) nextInstruction[3] ? nextInstruction[1] : nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x0B: //set less than unsigned
+         reg[nextInstruction[2]] = nextInstruction[1] < nextInstruction[3] ? nextInstruction[1] : nextInstruction[3];
+         clockCount += 4;
+         break;
+      case 0x04: //branch equal
+         if (reg[nextInstruction[2]] == reg[nextInstruction[1]])
+            PC = (PC + nextInstruction[3]) / 4;
+         clockCount += 3;
+         break;
+      case 0x05: //branch not equal
+         if (reg[nextInstruction[2]] != reg[nextInstruction[1]])
+            PC = (PC + nextInstruction[3]) / 4;
+         clockCount += 3;
+         break;
+      case 0x20: //load byte
+         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         if (addr == 0)
+            reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         else if (addr == 1)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
+         else if (addr == 2)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
+         else if (addr == 3)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
+         clockCount += 5;
+         break;
+      case 0x24: //load byte unsigned
+         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         if (addr == 0)
+            reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         else if (addr == 1)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SBYTEMASK) >> 8;
+         else if (addr == 2)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & TBYTEMASK) >> 16;
+         else if (addr == 3)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & FRBYTEMASK) >> 24;
+         clockCount += 5;
+         break;
+      case 0x21 || 0x25: //load halfword
+         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         if (addr == 0)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & HALFMASK);
+         else if (addr == 2)
+            reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
+         clockCount += 5;
+         break;
+      case 0x0F: //load upper
+         reg[nextInstruction[2]] = ((mem[nextInstruction[1] + nextInstruction[3]] / 4) & SHALFMASK) >> 16;
+         clockCount += 5;
+         break;
+      case 0x23: //load word
+         reg[nextInstruction[2]] = (mem[nextInstruction[1] + nextInstruction[3]]) / 4;
+         clockCount += 5;
+         break;
+      case 0x28: //store byte
+         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         if (addr == 0)
+            mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         else if (addr == 1)
+            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 8;
+         else if (addr == 2)
+            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
+         else if (addr == 3)
+            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 24;
+         clockCount += 5;
+         break;
+      case 0x29: //store halfword
+         addr = mem[nextInstruction[1] + nextInstruction[3]] % 4;
+         if (addr == 0)
+            mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         else if (addr == 2)
+            mem[nextInstruction[2] / 4] = ((reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK) << 16;
+         clockCount += 5;
+         break;
+      case 0x2B: //store word
+         mem[nextInstruction[2] / 4] = (reg[nextInstruction[1] + nextInstruction[3]] / 4) & BYTEMASK;
+         clockCount += 5;
+         break;
+         
+   }
+}
+
 void execute() {
 	int count;
    
@@ -119,6 +237,8 @@ void execute() {
 	}
 	printf("\n");
 }
+
+
 
 
 
