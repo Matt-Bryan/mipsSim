@@ -114,6 +114,7 @@ void decode(int memLoc) {
 	}
 }
 
+/*Function that handles I type instructions */
 void exImm() {
    unsigned int addr;
    PC += 4;
@@ -223,6 +224,102 @@ void exImm() {
          break;
          
    }
+}
+
+/* Sub routine of execute to handle register-type instructions */
+void exReg()
+{
+   unsigned int rs = nextInstruction[1];
+   unsigned int rt = nextInstruction[2];
+   unsigned int rd = nextInstruction[3]; 
+   unsigned int shamt = nextInstruction[4];  
+   unsigned int func = nextInstruction[5];
+   int signedVal1 = 0;
+   int signedVal2 = 0;
+
+   switch(func) 
+   {
+      case 0x00 : 	// sll
+         reg[rd] = (reg[rt] << shamt);
+         PC += 4; 
+         break;
+      case 0x02 : 	// srl
+         reg[rd] = (reg[rt] >> shamt);
+         PC += 4;
+         break;
+      case 0x03 : 	// sra ***NEED TO TEST
+         signedVal1 = (int) reg[rt];
+         reg[rd] = (signedVal1 >> shamt);
+         PC += 4;
+         break;
+      case 0x04 : 	// sllv
+         reg[rd] = (reg[rt] << reg[rs]);
+         PC += 4;
+         break;
+      case 0x06 : 	// srlv
+         reg[rd] = (reg[rt] >> reg[rs]);
+         PC += 4;
+         break;
+      case 0x07 : 	// srav
+         signedVal1 = (int) reg[rt];
+         reg[rd] = (signedVal1 >> reg[rs]);
+         PC += 4;
+         break;
+      case 0x08 : 	// jr
+         PC = reg[rs];
+         break;
+      case 0x09 : 	// jalr
+         reg[31] = PC + 4;
+         PC = reg[rs];
+         break;
+      case 0x20 : 	// add
+         signedVal1 = (int) reg[rs];
+         signedVal2 = (int) reg[rt];
+         reg[rd] = signedVal1 + signedVal2;
+         PC += 4;
+         break;
+      case 0x21 : 	// addu
+         reg[rd] = reg[rs] + reg[rt];
+         PC += 4;
+         break;
+      case 0x22 : 	// sub
+         signedVal1 = (int) reg[rs];
+         signedVal2 = (int) reg[rt];
+         reg[rd] = signedVal1 - signedVal2;
+         PC += 4;
+         break;
+      case 0x23 : 	// subu
+         reg[rd] = (reg[rs] - reg[rt]);
+         PC += 4;
+         break;
+      case 0x24 : 	// and
+         reg[rd] = (reg[rs] & reg[rt]);
+         PC += 4;
+         break;
+      case 0x25 : 	// or
+         reg[rd] = (reg[rs] | reg[rt]);
+         PC += 4;
+         break;
+      case 0x26 : 	// Xor
+         reg[rd] = (reg[rs] ^ reg[rt]);
+         PC += 4;
+         break;
+      case 0x27 : 	// Nor
+         reg[rd] = ~(reg[rs] | reg[rt]);
+         PC += 4;
+         break;
+      case 0x2A : 	// slt
+         signedVal1 = (int) reg[rs];
+         signedVal2 = (int) reg[rt];
+         reg[rd] = (signedVal1 < signedVal2);
+         PC += 4;
+         break;
+      case 0x2B : 	// sltu
+         reg[rd] = (reg[rs] < reg[rt]);
+         PC += 4;
+         break;
+   }
+   clockCount += 4;
 }
 
 void execute() {
