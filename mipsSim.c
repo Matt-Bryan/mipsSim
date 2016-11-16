@@ -83,36 +83,39 @@ int loadMemory(char *filename)	//This function acts as step 1 of lab 5, and load
 *  If it detects a syscall halt, it only puts -1 in first spot of buffer  -MB*/
 void decode(int memLoc) {
 	unsigned int instr = mem[memLoc/4], opCode;
-	int count;
+   int count;
 
-	for (count = 0; count < 6; count++) {	/* Clear out nextInstruction buffer */
-		nextInstruction[count] = 0;
-	}
-	opCode = (instr & OPMASK) >> 26;
-	nextInstruction[0] = opCode;
+   for (count = 0; count < 6; count++) {  /* Clear out nextInstruction buffer */
+      nextInstruction[count] = 0;
+   }
+   opCode = (instr & OPMASK) >> 26;
+   nextInstruction[0] = opCode;
 
-	if ((instr & SYMASK) == 0 && reg[2] == 10) {
-		//Syscall HALT
-		nextInstruction[0] = -1;
-	}
-	else if (opCode == 0) {
-		//Register
-		nextInstruction[1] = (instr & RSMASK) >> 21;
-		nextInstruction[2] = (instr & RTMASK) >> 16;
-		nextInstruction[3] = (instr & RDMASK) >> 11;
-		nextInstruction[4] = (instr & SHMASK) >> 6;
-		nextInstruction[5] = (instr & FNMASK);
-	}
-	else if (opCode == 0x02 || opCode == 0x03) {
-		//Jump
-		nextInstruction[1] = (instr & JIMASK);
-	}
-	else {
-		//Immediate
-		nextInstruction[1] = (instr & RSMASK) >> 21;
-		nextInstruction[2] = (instr & RTMASK) >> 16;
-		nextInstruction[3] = (instr & IMMASK);
-	}
+   if ((instr & SYMASK) == 0 && reg[2] == 10) {
+      //Syscall HALT
+      nextInstruction[0] = -1;
+   }
+   else if (opCode == 0) {
+      //Register
+      nextInstruction[1] = (instr & RSMASK) >> 21;
+      nextInstruction[2] = (instr & RTMASK) >> 16;
+      nextInstruction[3] = (instr & RDMASK) >> 11;
+      nextInstruction[4] = (instr & SHMASK) >> 6;
+      nextInstruction[5] = (instr & FNMASK);
+   }
+   else if (opCode == 0x02 || opCode == 0x03) {
+      //Jump
+      nextInstruction[1] = (instr & JIMASK);
+   }
+   else {
+      //Immediate
+      nextInstruction[1] = (instr & RSMASK) >> 21;
+      nextInstruction[2] = (instr & RTMASK) >> 16;
+      nextInstruction[3] = (instr & IMMASK);
+      if (instr & 0x00008000) {
+         nextInstruction[3] |= 0xFFFF0000;
+      }
+   }
 }
 
 void exJump() {
@@ -274,6 +277,7 @@ void exReg()
    unsigned int func = nextInstruction[5];
    int signedVal1 = 0;
    int signedVal2 = 0;
+   unsigned int unsignedVal = 0;
 
    switch(func) 
    {
@@ -282,7 +286,8 @@ void exReg()
          PC += 4; 
          break;
       case 0x02 : 	// srl
-         reg[rd] = (reg[rt] >> shamt);
+         unsignedVal = reg[rt];
+         reg[rd] = (unsignedVal >> shamt);
          PC += 4;
          break;
       case 0x03 : 	// sra ***NEED TO TEST
@@ -295,7 +300,8 @@ void exReg()
          PC += 4;
          break;
       case 0x06 : 	// srlv
-         reg[rd] = (reg[rt] >> reg[rs]);
+         unsignedVal = reg[rt];
+         reg[rd] = (unsignedVal >> reg[rs]);
          PC += 4;
          break;
       case 0x07 : 	// srav
@@ -393,7 +399,7 @@ void displayResult(int numInstr, float clockCount, int memRef) {
 	for (count; count < 32; count++) {
 		printf("R%d = %08X\n", count, reg[count]);
 	}
-	printf("Number of instructions simulated: %d\nMemory References: %d\nCPI: %.2f\n\n", numInstr, memRef, clockCount / numInstr);
+	printf("Number of instructions simulated: %d\nMemory References: %d\nCPI: %.2f\nPC: %08X\n", numInstr, memRef, clockCount / numInstr, PC);
 }
 
 int main(int argc, char **argv) {
