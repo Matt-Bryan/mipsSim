@@ -7,6 +7,8 @@
  *
  *
  *  This file will be modified to act as a fully-fledged MIPS simulator.
+ 
+ This is a test
  *----------------------------------------------------------------------*/
 
 
